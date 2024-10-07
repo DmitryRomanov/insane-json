@@ -70,6 +70,12 @@ var (
 			return decoder
 		},
 	}
+	decoderNodePool = sync.Pool{
+		New: func() interface{} {
+			node := &Node{}
+			return node
+		},
+	}
 
 	numbersMap = make([]byte, 256)
 
@@ -1806,16 +1812,22 @@ func (n *Node) getIndex() int {
 // ******************** //
 
 func (d *decoder) initPool() {
-	d.nodePool = make([]*Node, StartNodePoolSize, StartNodePoolSize)
+	if len(d.nodePool) > 0 {
+		for i := 0; i < len(d.nodePool); i++ {
+			resetNode(d.nodePool[i])
+			decoderNodePool.Put(d.nodePool[i])
+		}
+	}
+	d.nodePool = make([]*Node, StartNodePoolSize)
 	for i := 0; i < StartNodePoolSize; i++ {
-		d.nodePool[i] = &Node{}
+		d.nodePool[i] = decoderNodePool.Get().(*Node)
 	}
 }
 
 func (d *decoder) expandPool() []*Node {
 	c := cap(d.nodePool)
 	for i := 0; i < c; i++ {
-		d.nodePool = append(d.nodePool, &Node{})
+		d.nodePool = append(d.nodePool, decoderNodePool.Get().(*Node))
 	}
 
 	return d.nodePool
@@ -1825,7 +1837,20 @@ func getFromPool() *decoder {
 	return decoderPool.Get().(*decoder)
 }
 
+func resetNode(n *Node) {
+	n.bits = 0
+	n.data = ""
+	n.next = nil
+	n.parent = nil
+	n.nodes = nil
+	n.fields = nil
+}
+
 func backToPool(d *decoder) {
+	// for i := range d.nodePool {
+	// 	decoderNodePool.Put(d.nodePool[i])
+	// 	delete(d.nodePool, i)
+	// }
 	decoderPool.Put(d)
 }
 
