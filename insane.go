@@ -1847,10 +1847,9 @@ func resetNode(n *Node) {
 }
 
 func backToPool(d *decoder) {
-	// for i := range d.nodePool {
-	// 	decoderNodePool.Put(d.nodePool[i])
-	// 	delete(d.nodePool, i)
-	// }
+	for i := 0; i < len(d.nodePool); i++ {
+		resetNode(d.nodePool[i])
+	}
 	decoderPool.Put(d)
 }
 
