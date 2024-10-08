@@ -1814,7 +1814,9 @@ func (n *Node) getIndex() int {
 func (d *decoder) initPool() {
 	if len(d.nodePool) > 0 {
 		for i := 0; i < len(d.nodePool); i++ {
-			resetNode(d.nodePool[i])
+			if d.nodePool[i].bits != 0 {
+				resetNode(d.nodePool[i])
+			}
 			decoderNodePool.Put(d.nodePool[i])
 		}
 	}
@@ -1848,6 +1850,9 @@ func resetNode(n *Node) {
 
 func backToPool(d *decoder) {
 	for i := 0; i < len(d.nodePool); i++ {
+		if d.nodePool[i].bits == 0 {
+			break
+		}
 		resetNode(d.nodePool[i])
 	}
 	decoderPool.Put(d)
