@@ -1849,6 +1849,13 @@ func resetNode(n *Node) {
 }
 
 func backToPool(d *decoder) {
+	for len(d.nodePool) > StartNodePoolSize {
+		if d.nodePool[0].bits != 0 {
+			resetNode(d.nodePool[0])
+		}
+		decoderNodePool.Put(d.nodePool[0])
+		d.nodePool = d.nodePool[1:]
+	}
 	for i := 0; i < len(d.nodePool); i++ {
 		if d.nodePool[i].bits == 0 {
 			break
